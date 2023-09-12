@@ -1,0 +1,49 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kube-apiserver-throttler
+  namespace: kube-system
+rules:
+- apiGroups: ['*']
+  resources: ['*']
+  verbs: ['*']
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kube-apiserver-throttler
+  namespace: kube-system
+subjects:
+- kind: ServiceAccount
+  name: kube-apiserver-throttler
+  namespace: kube-system
+roleRef:
+  kind: Role
+  name: kube-apiserver-throttler
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: kube-system
+  name: kube-apiserver-throttler
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: kube-system
+  name: kube-apiserver-throttler
+spec:
+  selector:
+    matchLabels:
+      app: kube-apiserver-throttler
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: kube-apiserver-throttler
+    spec:
+      serviceAccountName: kube-apiserver-throttler
+      containers:
+      - name: kube-apiserver-throttler
+        image: gcr.io/zicong-gke-multi-cloud-dev-2/kube-apiserver-throttler:latest
